@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <script>
+    window.addEventListener('beforeunload', function (e) {
+      e.preventDefault();
+      e.returnValue = '';
+    });
+  </script>
+
+  <meta charset="UTF-8">
+  <title>Генерация изображений</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+
+    input,
+    textarea,
+    button {
+      display: block;
+      margin: 10px 0;
+      width: 100%;
+    }
+
+    img {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+
+    pre {
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Генератор изображений через WebUI</h1>
+
+  <label for="prompt">Промпт (описание):</label>
+  <textarea id="prompt" rows="3">the open palm of a man</textarea>
+
+  <label for="negative">Негативный промпт:</label>
+  <textarea id="negative" rows="2">no background</textarea>
+
+  <label for="steps">Шаги генерации:</label>
+  <input type="number" id="steps" value="10" min="1" max="100">
+
+  <label for="cfg">CFG Scale:</label>
+  <input type="number" id="cfg" value="7" step="0.5" min="1" max="20">
+
+  <button type="button" onclick="generate(event)">Генерировать</button>
+  <label for="imageUpload">Загрузить изображение:</label>
+  <input type="file" id="imageUpload" accept="image/*">
+  <button type="button" onclick="modifyImage(event)">Изменить изображение</button>
+
+
+  <div id="result"></div>
+  <button id="downloadBtn" style="display:none;">Скачать изображение</button>
+  <pre id="debug"></pre>
+
+  <script>
+    let interval = null;
+    let lastImageData = null;
+
+    async function generate(event) {
+      event.preventDefault();
+
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('debug').textContent = '';
+      document.getElementById('downloadBtn').style.display = 'none';
+
+      console.log("🟡 Генерация началась...");
+
+      const prompt = document.getElementById('prompt').value;
+      const negative = document.getElementById('negative').value;
+      const steps = parseInt(document.getElementById('steps').value);
+      const cfg = parseFloat(document.getElementById('cfg').value);
+
+      const payload = {
+        prompt: prompt,
+        negative_prompt: negative,
+        steps: steps,
+        cfg_scale: cfg,
+        width: 512,
+        height: 512,
+        save_images: true
+      };
+
+      console.log("📤 Отправка запроса:", payload);
+      document.getElementById('debug').textContent += "📤 Запрос:\n" + JSON.stringify(payload, null, 2) + "\n";
+
+      let progress = 0;
+      interval = setInterval(() => {
+        progress += 1;
+        console.log(`⏳ Ожидание... ${progress}s`);
+      }, 1000);
+
+      try {
+        console.log("📡 Отправка запроса на API...");
+
+        const response = await fetch('http://127.0.0.1:7860/sdapi/v1/txt2img', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        console.log("📡 Ответ статус:", response.status);
+
+        const raw = await response.text();
+        console.log("📄 Сырой ответ:", raw);
+        clearInterval(interval);
+        interval = null;
+
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          console.error("❌ Не удалось распарсить JSON:", e);
+          document.getElementById('debug').textContent += "\n❌ Ответ не является JSON:\n" + raw;
+          return false;
+        }
+
+        console.log("✅ Ответ получен:", data);
+        document.getElementById('debug').textContent += "\n✅ Ответ:\n" + JSON.stringify(data, null, 2);
+
+        if (data.images && data.images.length > 0 && data.images[0]) {
+          const image = data.images[0];
+          lastImageData = image;
+
+          // 👉 сохраняем картинку в localStorage
+          localStorage.setItem("lastGeneratedImage", image);
+
+          document.getElementById('result').innerHTML = `<img src="data:image/png;base64,${image}">`;
+          document.getElementById('downloadBtn').style.display = 'block';
+        } else {
+          console.warn("⚠️ Нет изображения в ответе.");
+          document.getElementById('result').innerHTML = `<p style="color:red;">⚠️ Нет изображения в ответе от WebUI.</p>`;
+        }
+      } catch (error) {
+        clearInterval(interval);
+        interval = null;
+        console.error("❌ Ошибка:", error);
+        document.getElementById('result').innerHTML = `<p style="color:red;">❌ Ошибка запроса: ${error.message}</p>`;
+        document.getElementById('debug').textContent += "\n❌ Ошибка:\n" + error.message;
+      }
+
+      return false;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!lastImageData) return;
+      const a = document.createElement('a');
+      a.href = `data:image/png;base64,${lastImageData}`;
+      a.download = 'generated.png';
+      a.click();
+    });
+
+    window.addEventListener('error', function (e) {
+      console.error("🌋 Глобальная ошибка:", e.message);
+    });
+
+    // 👉 восстанавливаем картинку при загрузке страницы
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("lastGeneratedImage");
+      if (saved) {
+        lastImageData = saved;
+        document.getElementById('result').innerHTML = `<img src="data:image/png;base64,${saved}">`;
+        document.getElementById('downloadBtn').style.display = 'block';
+        console.log("♻️ Восстановлено изображение из localStorage");
+      }
+    });
+    async function modifyImage(event) {
+      event.preventDefault();
+
+      const fileInput = document.getElementById('imageUpload');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Сначала выбери изображение для загрузки!");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function () {
+        const base64Image = reader.result.split(",")[1]; // убираем data:image/png;base64,
+
+        const prompt = document.getElementById('prompt').value;
+        const negative = document.getElementById('negative').value;
+        const steps = parseInt(document.getElementById('steps').value);
+        const cfg = parseFloat(document.getElementById('cfg').value);
+
+        const payload = {
+          prompt: prompt,
+          negative_prompt: negative,
+          steps: steps,
+          cfg_scale: cfg,
+          width: 512,
+          height: 512,
+          init_images: [base64Image],   // 👈 загруженное изображение
+          denoising_strength: 0.6,      // 👈 степень изменения (0.3 = мало, 0.8 = сильно)
+          save_images: true
+        };
+
+        try {
+          const response = await fetch('http://127.0.0.1:7860/sdapi/v1/img2img', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const raw = await response.text();
+          let data = JSON.parse(raw);
+
+          if (data.images && data.images.length > 0 && data.images[0]) {
+            const image = data.images[0];
+            lastImageData = image;
+
+            // сохраняем в localStorage
+            localStorage.setItem("lastGeneratedImage", image);
+
+            document.getElementById('result').innerHTML = `<img src="data:image/png;base64,${image}">`;
+            document.getElementById('downloadBtn').style.display = 'block';
+          } else {
+            document.getElementById('result').innerHTML = `<p style="color:red;">⚠️ Нет изображения в ответе от WebUI.</p>`;
+          }
+        } catch (error) {
+          console.error("❌ Ошибка:", error);
+          document.getElementById('result').innerHTML = `<p style="color:red;">❌ Ошибка запроса: ${error.message}</p>`;
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+  </script>
+</body>
+
+</html>
