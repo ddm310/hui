@@ -1,34 +1,109 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-  <h2>Генерация изображения</h2>
-<input type="text" id="prompt" placeholder="Введите описание">
-<button onclick="generate()">Сгенерировать</button>
-<br><br>
-<img id="result" width="512" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор изображений</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        input {
+            width: 300px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #result img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Генератор изображений</h1>
+    <p>Опишите что хотите увидеть (на русском):</p>
+    
+    <input type="text" id="prompt" placeholder="Например: красивый закат над морем...">
+    <button onclick="generateImage()">Сгенерировать изображение</button>
+    
+    <div id="result"></div>
 
-<script>
-  async function generate() {
-    const prompt = document.getElementById("prompt").value;
-    const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer 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",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ inputs: prompt })
-    });
-
-    const blob = await response.blob();
-    const imageUrl = URL.createObjectURL(blob);
-    document.getElementById("result").src = imageUrl;
-  }
-</script>
-
+    <script>
+        // ЗДЕСЬ БУДЕТ URL ВАШЕГО СЕРВЕРА ПОСЛЕ ДЕПЛОЯ
+        const SERVER_URL = "https://your-server-url.railway.app"; // Замените позже
+        
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!prompt.trim()) {
+                alert('Введите описание изображения');
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Это может занять 10-30 секунд</p>';
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({prompt: prompt})
+                });
+                
+                if (response.ok) {
+                    const imageBlob = await response.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    resultDiv.innerHTML = `
+                        <p>✅ Изображение готово!</p>
+                        <img src="${imageUrl}" alt="Generated image">
+                        <br>
+                        <button onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error || 'Неизвестная ошибка'}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения с сервером</p>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        function downloadImage(imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'generated-image.png';
+            link.click();
+        }
+        
+        // Enter key support
+        document.getElementById('prompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateImage();
+            }
+        });
+    </script>
 </body>
-
-
 </html>
-
-
