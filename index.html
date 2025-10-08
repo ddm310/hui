@@ -37,6 +37,13 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        .download-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -49,64 +56,62 @@
     <div id="result"></div>
 
     <script>
-    // ЗДЕСЬ БУДЕТ URL ВАШЕГО СЕРВЕРА ПОСЛЕ ДЕПЛОЯ
-    const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
-    
-    async function generateImage() {
-        const prompt = document.getElementById('prompt').value;
-        const resultDiv = document.getElementById('result');
+        const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
         
-        if (!prompt.trim()) {
-            alert('Введите описание изображения');
-            return;
-        }
-        
-        resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Это может занять 10-30 секунд</p>';
-        
-        try {
-            const response = await fetch(`${SERVER_URL}/generate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({prompt: prompt})
-            });
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const resultDiv = document.getElementById('result');
             
-            if (response.ok) {
-                const imageBlob = await response.blob();
-                const imageUrl = URL.createObjectURL(imageBlob);
-                resultDiv.innerHTML = `
-                    <p>✅ Изображение готово!</p>
-                    <img src="${imageUrl}" alt="Generated image">
-                    <br>
-                    <button onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
-                `;
-            } else {
-                const error = await response.json();
-                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error || 'Неизвестная ошибка'}</p>`;
+            if (!prompt.trim()) {
+                alert('Введите описание изображения');
+                return;
             }
-        } catch (error) {
-            resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения с сервером</p>`;
-            console.error('Error:', error);
+            
+            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Это может занять 10-30 секунд</p>';
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({prompt: prompt})
+                });
+                
+                if (response.ok) {
+                    const imageBlob = await response.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    resultDiv.innerHTML = `
+                        <p>✅ Изображение готово!</p>
+                        <img src="${imageUrl}" alt="Generated image">
+                        <br>
+                        <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error || 'Неизвестная ошибка'}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения с сервером</p>`;
+                console.error('Error:', error);
+            }
         }
-    }
-    
-    function downloadImage(imageUrl) {
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = 'generated-image.png';
-        link.click();
-    }
-    
-    // Enter key support
-    document.getElementById('prompt').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            generateImage();
+        
+        function downloadImage(imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'generated-image.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-    });
-</script>
+        
+        // Enter key support
+        document.getElementById('prompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateImage();
+            }
+        });
+    </script>
 </body>
 </html>
-
-
-
