@@ -137,11 +137,14 @@
     </select>
     
     <div class="upload-container" id="upload-container">
-        <label class="upload-label">🖼️ Загрузите изображение для редактирования (опционально)</label>
-        <input type="file" id="image-upload" class="file-input" accept="image/*">
-        <img id="image-preview" class="upload-preview" alt="Предпросмотр">
-        <div class="upload-hint">NanoBanano использует изображение как основу для генерации</div>
+    <label class="upload-label">🖼️ Загрузите изображение для редактирования (опционально)</label>
+    <input type="file" id="image-upload" class="file-input" accept="image/*">
+    <img id="image-preview" class="upload-preview" alt="Предпросмотр">
+    <div class="upload-hint">
+        <strong>Img2Img режим:</strong> изображение будет использовано как основа<br>
+        <small>Пример: загрузите фото человека, напишите "в костюме супергероя"</small>
     </div>
+</div>
     
     <div class="model-info">Все модели поддерживают автоматический перевод с русского через DeepSeek!</div>
     <div class="translation-info" id="translation-info">NanoBanano лучше всего подходит для креативных изображений</div>
@@ -326,3 +329,4 @@
     </script>
 </body>
 </html>
+
