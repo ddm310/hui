@@ -63,11 +63,13 @@
     <select class="custom-select" id="model-select" required>
         <option value="" selected disabled>Выберите модель</option>
         <option value="nanobanano">NanoBanano 🍌 (Лучшая для русского)</option>
-        <option value="pollinations">Pollinations.ai</option>
-        <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev</option>
-        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell</option>
+        <option value="pollinations">Pollinations Standard</option>
+        <option value="flux">FLUX</option>
+        <option value="dalle">DALL-E</option>
+        <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
+        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
-    <div class="model-info">NanoBanano лучше понимает русский и поддерживает загрузку изображений</div>
+    <div class="model-info">Все модели через Pollinations.ai - бесплатные и без API ключа</div>
     
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
@@ -82,7 +84,6 @@
             const selectedModel = modelSelect.value;
             const resultDiv = document.getElementById('result');
             
-            // Проверки
             if (!prompt.trim()) {
                 alert('Введите описание изображения');
                 return;
@@ -139,9 +140,11 @@
         function getModelName(modelValue) {
             const models = {
                 'nanobanano': 'NanoBanano 🍌',
-                'pollinations': 'Pollinations.ai',
-                'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev',
-                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell'
+                'pollinations': 'Pollinations Standard',
+                'flux': 'FLUX',
+                'dalle': 'DALL-E',
+                'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev (Hugging Face)',
+                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell (Hugging Face)'
             };
             return models[modelValue] || modelValue;
         }
