@@ -52,6 +52,11 @@
             color: #666;
             margin-top: 5px;
         }
+        .russian-hint {
+            font-size: 12px;
+            color: #28a745;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -70,6 +75,7 @@
         <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
     <div class="model-info">Все модели через Pollinations.ai - бесплатные и без API ключа</div>
+    <div class="russian-hint" id="russian-hint">NanoBanano лучше всего понимает русский текст</div>
     
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
@@ -148,6 +154,18 @@
             };
             return models[modelValue] || modelValue;
         }
+        
+        // Подсказка при выборе модели
+        document.getElementById('model-select').addEventListener('change', function(e) {
+            const hint = document.getElementById('russian-hint');
+            if (e.target.value === 'nanobanano') {
+                hint.textContent = 'NanoBanano лучше всего понимает русский текст';
+                hint.style.color = '#28a745';
+            } else {
+                hint.textContent = 'Для лучших результатов с русским используйте NanoBanano';
+                hint.style.color = '#ffc107';
+            }
+        });
         
         document.getElementById('prompt').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
