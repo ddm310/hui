@@ -58,6 +58,22 @@
             margin-top: 5px;
             font-style: italic;
         }
+        .translation-result {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        .original-text {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .translated-text {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -100,7 +116,7 @@
                 return;
             }
             
-            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Переводчик работает...</p>';
+            resultDiv.innerHTML = '<p>🔄 Генерация запущена... Переводчик DeepSeek работает...</p>';
             
             try {
                 const response = await fetch(`${SERVER_URL}/generate`, {
@@ -117,9 +133,21 @@
                 if (response.ok) {
                     const imageBlob = await response.blob();
                     const imageUrl = URL.createObjectURL(imageBlob);
+                    
+                    // Получаем информацию о переводе из заголовков или отдельным запросом
+                    const translationInfo = await getTranslationInfo(prompt);
+                    
                     resultDiv.innerHTML = `
                         <p>✅ Изображение готово!</p>
                         <p><small>Модель: ${getModelName(selectedModel)}</small></p>
+                        
+                        ${translationInfo ? `
+                        <div class="translation-result">
+                            <div class="original-text">🇷🇺 Русский: "${translationInfo.original}"</div>
+                            <div class="translated-text">🇺🇸 English: "${translationInfo.translated}"</div>
+                        </div>
+                        ` : ''}
+                        
                         <img src="${imageUrl}" alt="Generated image">
                         <br>
                         <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
@@ -132,6 +160,31 @@
                 resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения с сервером</p>`;
                 console.error('Error:', error);
             }
+        }
+        
+        async function getTranslationInfo(originalText) {
+            try {
+                const response = await fetch(`${SERVER_URL}/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: originalText
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        original: data.original,
+                        translated: data.deepseek_translation || data.google_translation || originalText
+                    };
+                }
+            } catch (e) {
+                console.error('Translation info error:', e);
+            }
+            return null;
         }
         
         function downloadImage(imageUrl) {
@@ -154,14 +207,14 @@
             return models[modelValue] || modelValue;
         }
         
-        // Показываем подсказку о переводе при вводе русского текста
+        // Показываем подсказку о переводе
         document.getElementById('prompt').addEventListener('input', function(e) {
             const hint = document.getElementById('translation-info');
             const text = e.target.value;
             const hasRussian = /[а-яё]/i.test(text);
             
             if (hasRussian && text.length > 2) {
-                hint.textContent = '✓ Русский текст будет автоматически переведен';
+                hint.textContent = '✓ DeepSeek переведет русский текст на английский';
                 hint.style.color = '#28a745';
             } else {
                 hint.textContent = 'Русский текст будет автоматически переведен на английский';
