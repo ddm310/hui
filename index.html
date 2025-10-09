@@ -52,30 +52,30 @@
             color: #666;
             margin-top: 5px;
         }
-        .russian-hint {
+        .translation-info {
             font-size: 12px;
-            color: #28a745;
+            color: #17a2b8;
             margin-top: 5px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <h1>🎨 Генератор изображений</h1>
-    <p>Опишите что хотите увидеть (на русском):</p>
+    <p>Опишите что хотите увидеть (можно на русском):</p>
     
     <input type="text" id="prompt" placeholder="Например: красивый закат над морем...">
 
     <select class="custom-select" id="model-select" required>
         <option value="" selected disabled>Выберите модель</option>
-        <option value="nanobanano">NanoBanano 🍌 (Лучшая для русского)</option>
-        <option value="pollinations">Pollinations Standard</option>
+        <option value="pollinations">Pollinations Standard 🌟</option>
         <option value="flux">FLUX</option>
         <option value="dalle">DALL-E</option>
         <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
         <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
-    <div class="model-info">Все модели через Pollinations.ai - бесплатные и без API ключа</div>
-    <div class="russian-hint" id="russian-hint">NanoBanano лучше всего понимает русский текст</div>
+    <div class="model-info">Все модели поддерживают автоматический перевод с русского!</div>
+    <div class="translation-info" id="translation-info">Русский текст будет автоматически переведен на английский</div>
     
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
@@ -100,7 +100,7 @@
                 return;
             }
             
-            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Это может занять 10-30 секунд</p>';
+            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Переводчик работает...</p>';
             
             try {
                 const response = await fetch(`${SERVER_URL}/generate`, {
@@ -145,8 +145,7 @@
         
         function getModelName(modelValue) {
             const models = {
-                'nanobanano': 'NanoBanano 🍌',
-                'pollinations': 'Pollinations Standard',
+                'pollinations': 'Pollinations Standard 🌟',
                 'flux': 'FLUX',
                 'dalle': 'DALL-E',
                 'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev (Hugging Face)',
@@ -155,15 +154,18 @@
             return models[modelValue] || modelValue;
         }
         
-        // Подсказка при выборе модели
-        document.getElementById('model-select').addEventListener('change', function(e) {
-            const hint = document.getElementById('russian-hint');
-            if (e.target.value === 'nanobanano') {
-                hint.textContent = 'NanoBanano лучше всего понимает русский текст';
+        // Показываем подсказку о переводе при вводе русского текста
+        document.getElementById('prompt').addEventListener('input', function(e) {
+            const hint = document.getElementById('translation-info');
+            const text = e.target.value;
+            const hasRussian = /[а-яё]/i.test(text);
+            
+            if (hasRussian && text.length > 2) {
+                hint.textContent = '✓ Русский текст будет автоматически переведен';
                 hint.style.color = '#28a745';
             } else {
-                hint.textContent = 'Для лучших результатов с русским используйте NanoBanano';
-                hint.style.color = '#ffc107';
+                hint.textContent = 'Русский текст будет автоматически переведен на английский';
+                hint.style.color = '#17a2b8';
             }
         });
         
