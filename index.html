@@ -74,6 +74,15 @@
             font-weight: bold;
             font-size: 14px;
         }
+        .nanobanano-badge {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: black;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -84,14 +93,17 @@
 
     <select class="custom-select" id="model-select" required>
         <option value="" selected disabled>Выберите модель</option>
-        <option value="pollinations">Pollinations Standard 🌟</option>
+        <option value="nanobanano">NanoBanano 🍌 <span class="nanobanano-badge">РЕКОМЕНДУЕМАЯ</span></option>
+        <option value="pollinations">Pollinations Standard</option>
         <option value="flux">FLUX</option>
         <option value="dalle">DALL-E</option>
+        <option value="stable-diffusion">Stable Diffusion</option>
+        <option value="midjourney">Midjourney</option>
         <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
         <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
-    <div class="model-info">Все модели поддерживают автоматический перевод с русского!</div>
-    <div class="translation-info" id="translation-info">Русский текст будет автоматически переведен на английский</div>
+    <div class="model-info">Все модели поддерживают автоматический перевод с русского через DeepSeek!</div>
+    <div class="translation-info" id="translation-info">NanoBanano лучше всего подходит для креативных изображений</div>
     
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
@@ -134,7 +146,7 @@
                     const imageBlob = await response.blob();
                     const imageUrl = URL.createObjectURL(imageBlob);
                     
-                    // Получаем информацию о переводе из заголовков или отдельным запросом
+                    // Получаем информацию о переводе
                     const translationInfo = await getTranslationInfo(prompt);
                     
                     resultDiv.innerHTML = `
@@ -198,28 +210,34 @@
         
         function getModelName(modelValue) {
             const models = {
-                'pollinations': 'Pollinations Standard 🌟',
+                'nanobanano': 'NanoBanano 🍌',
+                'pollinations': 'Pollinations Standard',
                 'flux': 'FLUX',
                 'dalle': 'DALL-E',
+                'stable-diffusion': 'Stable Diffusion',
+                'midjourney': 'Midjourney',
                 'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev (Hugging Face)',
                 'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell (Hugging Face)'
             };
             return models[modelValue] || modelValue;
         }
         
-        // Показываем подсказку о переводе
-        document.getElementById('prompt').addEventListener('input', function(e) {
+        // Обновляем подсказку при выборе модели
+        document.getElementById('model-select').addEventListener('change', function(e) {
             const hint = document.getElementById('translation-info');
-            const text = e.target.value;
-            const hasRussian = /[а-яё]/i.test(text);
+            const selectedModel = e.target.value;
             
-            if (hasRussian && text.length > 2) {
-                hint.textContent = '✓ DeepSeek переведет русский текст на английский';
-                hint.style.color = '#28a745';
-            } else {
-                hint.textContent = 'Русский текст будет автоматически переведен на английский';
-                hint.style.color = '#17a2b8';
-            }
+            const hints = {
+                'nanobanano': '🍌 NanoBanano - лучшая для креативных и артовых изображений',
+                'pollinations': 'Pollinations Standard - сбалансированное качество',
+                'flux': 'FLUX - современная модель с высоким качеством',
+                'dalle': 'DALL-E - хороша для концепт-артов',
+                'stable-diffusion': 'Stable Diffusion - классическая модель',
+                'midjourney': 'Midjourney - стилизованные изображения'
+            };
+            
+            hint.textContent = hints[selectedModel] || 'Русский текст будет автоматически переведен';
+            hint.style.color = selectedModel === 'nanobanano' ? '#28a745' : '#17a2b8';
         });
         
         document.getElementById('prompt').addEventListener('keypress', function(e) {
