@@ -133,10 +133,9 @@
         // Функция для красивого отображения названия модели
         function getModelName(modelValue) {
             const models = {
+                'pollinations': 'Pollinations.ai (Бесплатно)',
                 'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev',
-                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell', 
-                'stabilityai/stable-diffusion-xl-base-1.0': 'Stable Diffusion XL',
-                'stabilityai/stable-diffusion-3-medium-diffusers': 'Stable Diffusion 3'
+                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell'
             };
             return models[modelValue] || modelValue;
         }
@@ -150,4 +149,3 @@
     </script>
 </body>
 </html>
-
