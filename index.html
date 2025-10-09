@@ -12,13 +12,16 @@
             padding: 20px;
             text-align: center;
         }
-        input, button {
+        input, button, select {
             padding: 10px;
             margin: 10px;
             font-size: 16px;
         }
         input {
             width: 300px;
+        }
+        select {
+            width: 320px;
         }
         button {
             background: #007bff;
@@ -37,6 +40,13 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        .download-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -44,32 +54,52 @@
     <p>Опишите что хотите увидеть (на русском):</p>
     
     <input type="text" id="prompt" placeholder="Например: красивый закат над морем...">
+
+    <select class="custom-select" id="model-select" required>
+         <option value="" selected disabled>Выберите модель</option>
+         <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev</option>
+         <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell</option>
+         <option value="stabilityai/stable-diffusion-xl-base-1.0">Stable Diffusion XL</option>
+         <option value="stabilityai/stable-diffusion-3-medium-diffusers">Stable Diffusion 3</option>
+    </select>
+    
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
     <div id="result"></div>
 
     <script>
-        // ЗДЕСЬ БУДЕТ URL ВАШЕГО СЕРВЕРА ПОСЛЕ ДЕПЛОЯ
-        const SERVER_URL = "https://my-image-generator-npkn.onrender.com"; // Замените позже
+        const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
         
         async function generateImage() {
             const prompt = document.getElementById('prompt').value;
+            const modelSelect = document.getElementById('model-select');
+            const selectedModel = modelSelect.value;
             const resultDiv = document.getElementById('result');
             
+            // Проверки
             if (!prompt.trim()) {
                 alert('Введите описание изображения');
+                return;
+            }
+            
+            if (!selectedModel) {
+                alert('Выберите модель');
                 return;
             }
             
             resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Это может занять 10-30 секунд</p>';
             
             try {
+                // Отправляем и промпт и выбранную модель на сервер
                 const response = await fetch(`${SERVER_URL}/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({prompt: prompt})
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        model: selectedModel  // Добавляем выбранную модель
+                    })
                 });
                 
                 if (response.ok) {
@@ -77,9 +107,10 @@
                     const imageUrl = URL.createObjectURL(imageBlob);
                     resultDiv.innerHTML = `
                         <p>✅ Изображение готово!</p>
+                        <p><small>Модель: ${getModelName(selectedModel)}</small></p>
                         <img src="${imageUrl}" alt="Generated image">
                         <br>
-                        <button onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
+                        <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
                     `;
                 } else {
                     const error = await response.json();
@@ -95,7 +126,20 @@
             const link = document.createElement('a');
             link.href = imageUrl;
             link.download = 'generated-image.png';
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Функция для красивого отображения названия модели
+        function getModelName(modelValue) {
+            const models = {
+                'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev',
+                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell', 
+                'stabilityai/stable-diffusion-xl-base-1.0': 'Stable Diffusion XL',
+                'stabilityai/stable-diffusion-3-medium-diffusers': 'Stable Diffusion 3'
+            };
+            return models[modelValue] || modelValue;
         }
         
         // Enter key support
