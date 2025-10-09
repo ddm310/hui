@@ -83,6 +83,39 @@
             font-weight: bold;
             margin-left: 5px;
         }
+        .upload-container {
+            display: none;
+            margin: 15px 0;
+            padding: 15px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .upload-container.active {
+            display: block;
+        }
+        .upload-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .upload-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px auto;
+            display: none;
+            border-radius: 5px;
+            border: 2px solid #28a745;
+        }
+        .file-input {
+            width: auto;
+        }
+        .upload-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +135,14 @@
         <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
         <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
+    
+    <div class="upload-container" id="upload-container">
+        <label class="upload-label">🖼️ Загрузите изображение для редактирования (опционально)</label>
+        <input type="file" id="image-upload" class="file-input" accept="image/*">
+        <img id="image-preview" class="upload-preview" alt="Предпросмотр">
+        <div class="upload-hint">NanoBanano использует изображение как основу для генерации</div>
+    </div>
+    
     <div class="model-info">Все модели поддерживают автоматический перевод с русского через DeepSeek!</div>
     <div class="translation-info" id="translation-info">NanoBanano лучше всего подходит для креативных изображений</div>
     
@@ -112,10 +153,62 @@
     <script>
         const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
         
+        // Показываем/скрываем поле загрузки для NanoBanano
+        document.getElementById('model-select').addEventListener('change', function(e) {
+            const uploadContainer = document.getElementById('upload-container');
+            const selectedModel = e.target.value;
+            
+            if (selectedModel === 'nanobanano') {
+                uploadContainer.classList.add('active');
+            } else {
+                uploadContainer.classList.remove('active');
+                // Очищаем превью при смене модели
+                document.getElementById('image-preview').style.display = 'none';
+                document.getElementById('image-upload').value = '';
+            }
+            
+            // Обновляем подсказки
+            updateModelHints(selectedModel);
+        });
+        
+        // Превью загруженного изображения
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('image-preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        function updateModelHints(selectedModel) {
+            const hint = document.getElementById('translation-info');
+            
+            const hints = {
+                'nanobanano': '🍌 NanoBanano - загрузите изображение для редактирования (img2img)',
+                'pollinations': 'Pollinations Standard - сбалансированное качество',
+                'flux': 'FLUX - современная модель с высоким качеством',
+                'dalle': 'DALL-E - хороша для концепт-артов',
+                'stable-diffusion': 'Stable Diffusion - классическая модель',
+                'midjourney': 'Midjourney - стилизованные изображения'
+            };
+            
+            hint.textContent = hints[selectedModel] || 'Русский текст будет автоматически переведен';
+            hint.style.color = selectedModel === 'nanobanano' ? '#28a745' : '#17a2b8';
+        }
+        
         async function generateImage() {
             const prompt = document.getElementById('prompt').value;
             const modelSelect = document.getElementById('model-select');
             const selectedModel = modelSelect.value;
+            const imageInput = document.getElementById('image-upload');
             const resultDiv = document.getElementById('result');
             
             if (!prompt.trim()) {
@@ -131,15 +224,18 @@
             resultDiv.innerHTML = '<p>🔄 Генерация запущена... Переводчик DeepSeek работает...</p>';
             
             try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+                formData.append('model', selectedModel);
+                
+                // Добавляем изображение если выбрано и модель NanoBanano
+                if (selectedModel === 'nanobanano' && imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                
                 const response = await fetch(`${SERVER_URL}/generate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        model: selectedModel
-                    })
+                    body: formData
                 });
                 
                 if (response.ok) {
@@ -190,7 +286,7 @@
                     const data = await response.json();
                     return {
                         original: data.original,
-                        translated: data.deepseek_translation || data.google_translation || originalText
+                        translated: data.deepseek_translation || originalText
                     };
                 }
             } catch (e) {
@@ -221,24 +317,6 @@
             };
             return models[modelValue] || modelValue;
         }
-        
-        // Обновляем подсказку при выборе модели
-        document.getElementById('model-select').addEventListener('change', function(e) {
-            const hint = document.getElementById('translation-info');
-            const selectedModel = e.target.value;
-            
-            const hints = {
-                'nanobanano': '🍌 NanoBanano - лучшая для креативных и артовых изображений',
-                'pollinations': 'Pollinations Standard - сбалансированное качество',
-                'flux': 'FLUX - современная модель с высоким качеством',
-                'dalle': 'DALL-E - хороша для концепт-артов',
-                'stable-diffusion': 'Stable Diffusion - классическая модель',
-                'midjourney': 'Midjourney - стилизованные изображения'
-            };
-            
-            hint.textContent = hints[selectedModel] || 'Русский текст будет автоматически переведен';
-            hint.style.color = selectedModel === 'nanobanano' ? '#28a745' : '#17a2b8';
-        });
         
         document.getElementById('prompt').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
