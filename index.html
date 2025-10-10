@@ -1,135 +1,67 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор изображений</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-        input, button, select {
-            padding: 10px;
-            margin: 10px;
-            font-size: 16px;
-        }
-        input {
-            width: 300px;
-        }
-        select {
-            width: 320px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        #result {
-            margin-top: 20px;
-        }
-        #result img {
-            max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .download-btn {
-            background: #28a745;
-            margin-top: 10px;
-        }
-        .download-btn:hover {
-            background: #218838;
-        }
-        .model-info {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        .translation-info {
-            font-size: 12px;
-            color: #17a2b8;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        .translation-result {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border-left: 4px solid #17a2b8;
-        }
-        .original-text {
-            color: #6c757d;
-            font-size: 14px;
-        }
-        .translated-text {
-            color: #28a745;
-            font-weight: bold;
-            font-size: 14px;
-        }
-    </style>
+    <title>Тест генератора</title>
 </head>
 <body>
-    <h1>🎨 Генератор изображений</h1>
-    <p>Опишите что хотите увидеть (можно на русском):</p>
+    <h1>🧪 Тест генератора</h1>
     
-    <input type="text" id="prompt" placeholder="Например: красивый закат над морем...">
+    <input type="text" id="prompt" placeholder="Введите промпт..." value="a cute cat">
+    <button onclick="testGenerate()">Тест генерации</button>
+    <button onclick="testHealth()">Тест сервера</button>
+    
+    <div id="result" style="margin-top: 20px;"></div>
 
-    <select class="custom-select" id="model-select" required>
-        <option value="" selected disabled>Выберите модель</option>
-        <option value="pollinations">Pollinations Standard 🌟</option>
-        <option value="flux">FLUX</option>
-        <option value="dalle">DALL-E</option>
-        <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
-        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
-    </select>
-    <div class="model-info">Все модели поддерживают автоматический перевод с русского!</div>
-    <div class="translation-info" id="translation-info">Русский текст будет автоматически переведен на английский</div>
-    
-    <button onclick="generateImage()">Сгенерировать изображение</button>
-    
-    <div id="result"></div>
-
-   <script>
-async function generateSmart() {
-    const prompt = document.getElementById('prompt').value;
-    const model = document.getElementById('model-select').value;
-    const imageFile = document.getElementById('image-upload').files[0];
-    
-    const formData = new FormData();
-    formData.append('prompt', prompt);
-    formData.append('model', model);
-    if (imageFile) {
-        formData.append('image', imageFile);
-    }
-    
-    const response = await fetch('/generate-smart', {
-        method: 'POST',
-        body: formData
-    });
-    
-    if (response.ok) {
-        // Обработка успешного ответа
-        const imageBlob = await response.blob();
-        const imageUrl = URL.createObjectURL(imageBlob);
-        document.getElementById('result').innerHTML = `
-            <p>✅ Изображение готово!</p>
-            <img src="${imageUrl}" alt="Generated image">
-        `;
-    } else {
-        const error = await response.json();
-        document.getElementById('result').innerHTML = `
-            <p style="color: red;">❌ Ошибка: ${error.error}</p>
-        `;
-    }
-}
-</script>
+    <script>
+        const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
+        
+        async function testHealth() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch(`${SERVER_URL}/health`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<p>✅ Сервер работает: ${data.message}</p>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error}</p>`;
+            }
+        }
+        
+        async function testGenerate() {
+            const prompt = document.getElementById('prompt').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!prompt) {
+                alert('Введите промпт');
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>🔄 Генерируем...</p>';
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        model: 'nanobanano'
+                    })
+                });
+                
+                if (response.ok) {
+                    const imageBlob = await response.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    resultDiv.innerHTML = `
+                        <p>✅ Успех!</p>
+                        <img src="${imageUrl}" style="max-width: 300px;">
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения: ${error}</p>`;
+            }
+        }
+    </script>
 </body>
 </html>
