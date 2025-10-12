@@ -3,171 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Будущее через 10 лет</title>
+    <title>🔮 Будущее через 10 лет</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            text-align: center;
-            background: #f5f5f5;
+            color: #333;
         }
+
         .container {
+            max-width: 900px;
+            margin: 0 auto;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
         .upload-area {
             border: 3px dashed #3498db;
-            border-radius: 10px;
-            padding: 40px;
-            margin: 20px 0;
-            background: #ecf0f1;
+            border-radius: 15px;
+            padding: 50px 30px;
+            text-align: center;
+            background: #f8f9fa;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
+
+        .upload-area:hover {
+            background: #e3f2fd;
+            border-color: #2980b9;
+        }
+
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+
+        .upload-area p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
         #image-preview {
-            max-width: 300px;
+            max-width: 100%;
             max-height: 300px;
-            margin: 15px auto;
+            margin: 20px auto;
             display: none;
             border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        input, button {
-            padding: 12px;
-            margin: 10px;
+
+        .input-section {
+            margin: 30px 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #bdc3c7;
-            width: 80%;
+            transition: border-color 0.3s ease;
         }
-        button {
-            background: #3498db;
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .strength-control {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .strength-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .strength-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #e74c3c 0%, #e67e22 100%);
             color: white;
             border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            padding: 15px 30px;
+            transition: all 0.3s ease;
+            margin: 20px 0;
         }
-        button:hover {
-            background: #2980b9;
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(230, 126, 34, 0.3);
         }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .examples {
+            background: #e8f4f8;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+
+        .examples h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .example-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-size: 0.95em;
+        }
+
         .loading {
             display: none;
-            color: #3498db;
-            font-size: 18px;
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            display: none;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+
+        .download-btn {
+            padding: 12px 25px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #219a52;
+        }
+
+        .error {
+            background: #fee;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #c0392b;
+        }
+
+        .success {
+            background: #efe;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #27ae60;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔮 Как изменится это место через 10 лет?</h1>
-        
-        <div class="upload-area" onclick="document.getElementById('image-upload').click()">
-            <h3>📸 Загрузите фото места</h3>
-            <p>Перетащите или кликните для загрузки</p>
-            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+        <div class="header">
+            <h1>🔮 Будущее через 10 лет</h1>
+            <p>Загрузите фото места и посмотрите, как оно может измениться через десятилетие</p>
         </div>
-        
-        <img id="image-preview" alt="Предпросмотр">
-        
-        <div>
-            <input type="text" id="prompt" placeholder="Опишите изменения (например: больше зелени, новые здания, экологичный транспорт...)">
+
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" onclick="document.getElementById('image-upload').click()">
+                    <h3>📸 Загрузите фото места</h3>
+                    <p>Перетащите сюда изображение или кликните для выбора</p>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                </div>
+                <img id="image-preview" alt="Предпросмотр загруженного изображения">
+            </div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="prompt">💡 Опишите изменения:</label>
+                    <input type="text" id="prompt" placeholder="Например: больше деревьев, современные здания, экологичный транспорт...">
+                </div>
+
+                <div class="strength-control">
+                    <label>🎚️ Сила изменений: <span id="strength-value">70%</span></label>
+                    <input type="range" class="strength-slider" id="strength-slider" min="10" max="90" value="70">
+                    <div class="strength-labels">
+                        <span>Слабые</span>
+                        <span>Умеренные</span>
+                        <span>Сильные</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generateFuture()">
+                🔮 Показать будущее
+            </button>
+
+            <div class="examples">
+                <h3>💡 Примеры для вдохновения:</h3>
+                <div class="example-list">
+                    <div class="example-item">• Больше зелени и парков</div>
+                    <div class="example-item">• Современная архитектура</div>
+                    <div class="example-item">• Экологичный транспорт</div>
+                    <div class="example-item">• Солнечные панели</div>
+                    <div class="example-item">• Велодорожки</div>
+                    <div class="example-item">• Умные технологии</div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>🔍 Анализируем изображение...</p>
+                <p>🎨 Генерируем видение будущего...</p>
+                <p><small>Это может занять 20-30 секунд</small></p>
+            </div>
+
+            <div class="result-section" id="result-section">
+                <h3>✨ Вот как это место может выглядеть через 10 лет:</h3>
+                <img class="result-image" id="result-image" alt="Визуализация будущего">
+                <br>
+                <button class="download-btn" onclick="downloadImage()">💾 Скачать изображение</button>
+            </div>
+
+            <div id="message"></div>
         </div>
-        
-        <button onclick="generateFuture()">🔮 Показать будущее</button>
-        
-        <div class="loading" id="loading">
-            🔍 Анализируем изображение... 🎨 Генерируем будущее...
-        </div>
-        
-        <div id="result"></div>
     </div>
 
     <script>
+        // Конфигурация
         const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
+        let currentImageUrl = null;
+        let strength = 0.7;
 
-        // Превью изображения
-        document.getElementById('image-upload').addEventListener('change', function(e) {
+        // Элементы DOM
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const promptInput = document.getElementById('prompt');
+        const strengthSlider = document.getElementById('strength-slider');
+        const strengthValue = document.getElementById('strength-value');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('result-section');
+        const resultImage = document.getElementById('result-image');
+        const messageDiv = document.getElementById('message');
+
+        // Обработчики событий
+        imageUpload.addEventListener('change', handleImageUpload);
+        strengthSlider.addEventListener('input', updateStrength);
+        promptInput.addEventListener('keypress', handleEnterKey);
+
+        function handleImageUpload(e) {
             const file = e.target.files[0];
-            const preview = document.getElementById('image-preview');
-            
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    showMessage('✅ Изображение загружено! Теперь опишите изменения.', 'success');
+                };
                 reader.readAsDataURL(file);
             }
-        });
+        }
+
+        function updateStrength(e) {
+            strength = e.target.value / 100;
+            strengthValue.textContent = e.target.value + '%';
+        }
+
+        function handleEnterKey(e) {
+            if (e.key === 'Enter') {
+                generateFuture();
+            }
+        }
 
         async function generateFuture() {
-            const prompt = document.getElementById('prompt').value;
-            const imageFile = document.getElementById('image-upload').files[0];
-            const resultDiv = document.getElementById('result');
-            const loading = document.getElementById('loading');
-            
+            const prompt = promptInput.value.trim();
+            const imageFile = imageUpload.files[0];
+
+            // Валидация
             if (!imageFile) {
-                alert('📸 Сначала загрузите фото места');
+                showMessage('📸 Пожалуйста, сначала загрузите фото места', 'error');
                 return;
             }
-            
-            if (!prompt.trim()) {
-                alert('✍️ Опишите какие изменения хотите увидеть');
+
+            if (!prompt) {
+                showMessage('✍️ Опишите, какие изменения вы хотите увидеть', 'error');
                 return;
             }
-            
+
+            // Показываем загрузку
             loading.style.display = 'block';
-            resultDiv.innerHTML = '';
-            
+            resultSection.style.display = 'none';
+            messageDiv.innerHTML = '';
+
             try {
                 const formData = new FormData();
                 formData.append('prompt', prompt);
                 formData.append('image', imageFile);
-                
+                formData.append('strength', strength);
+
                 const response = await fetch(`${SERVER_URL}/generate`, {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (response.ok) {
                     const imageBlob = await response.blob();
-                    const imageUrl = URL.createObjectURL(imageBlob);
-                    resultDiv.innerHTML = `
-                        <h3>✨ Вот как это может выглядеть через 10 лет:</h3>
-                        <img src="${imageUrl}" alt="Будущее" style="max-width: 100%; border-radius: 10px; margin: 20px 0;">
-                        <button onclick="downloadImage('${imageUrl}')">💾 Скачать изображение</button>
-                    `;
+                    currentImageUrl = URL.createObjectURL(imageBlob);
+                    
+                    resultImage.src = currentImageUrl;
+                    resultSection.style.display = 'block';
+                    showMessage('✅ Готово! Вот видение будущего этого места.', 'success');
+                    
+                    // Прокрутка к результату
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     const error = await response.json();
-                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error}</p>`;
+                    showMessage(`❌ Ошибка: ${error.error || 'Неизвестная ошибка'}`, 'error');
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения: ${error}</p>`;
+                showMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
             } finally {
                 loading.style.display = 'none';
             }
         }
 
-        function downloadImage(imageUrl) {
-            const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = 'будущее-через-10-лет.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        function downloadImage() {
+            if (currentImageUrl) {
+                const link = document.createElement('a');
+                link.href = currentImageUrl;
+                link.download = 'будущее-через-10-лет.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('✅ Изображение скачивается...', 'success');
+            }
         }
 
-        // Enter для генерации
-        document.getElementById('prompt').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                generateFuture();
-            }
-        });
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="${type}">${text}</div>`;
+        }
+
+        // Инициализация
+        console.log('🚀 Future Vision Project loaded');
+        console.log('📍 Server URL:', SERVER_URL);
     </script>
 </body>
 </html>
-
-
