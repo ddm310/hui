@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор изображений</title>
+    <title>Будущее через 10 лет</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,126 +11,82 @@
             margin: 0 auto;
             padding: 20px;
             text-align: center;
+            background: #f5f5f5;
         }
-        input, button, select {
-            padding: 10px;
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            margin: 20px 0;
+            background: #ecf0f1;
+            cursor: pointer;
+        }
+        #image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 15px auto;
+            display: none;
+            border-radius: 10px;
+        }
+        input, button {
+            padding: 12px;
             margin: 10px;
             font-size: 16px;
-        }
-        input {
-            width: 300px;
-        }
-        select {
-            width: 320px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            width: 80%;
         }
         button {
-            background: #007bff;
+            background: #3498db;
             color: white;
             border: none;
             cursor: pointer;
+            font-weight: bold;
+            padding: 15px 30px;
         }
         button:hover {
-            background: #0056b3;
+            background: #2980b9;
         }
-        #result {
-            margin-top: 20px;
-        }
-        #result img {
-            max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .download-btn {
-            background: #28a745;
-            margin-top: 10px;
-        }
-        .upload-container {
+        .loading {
             display: none;
-            margin: 15px 0;
-            padding: 15px;
-            border: 2px dashed #007bff;
-            border-radius: 8px;
-            background: #f8f9fa;
-        }
-        .upload-container.active {
-            display: block;
-        }
-        .upload-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 10px auto;
-            display: none;
-            border-radius: 5px;
-            border: 2px solid #28a745;
-        }
-        .mode-selector {
-            margin: 10px 0;
-        }
-        .mode-btn {
-            background: #6c757d;
-            margin: 5px;
-        }
-        .mode-btn.active {
-            background: #007bff;
-        }
-        .translation-info {
-            font-size: 12px;
-            color: #17a2b8;
-            margin-top: 5px;
+            color: #3498db;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <h1>🎨 Генератор изображений</h1>
-    
-    <div class="mode-selector">
-        <button class="mode-btn active" onclick="setMode('create')">🆕 Создать новое</button>
-        <button class="mode-btn" onclick="setMode('edit')">✏️ Редактировать изображение</button>
+    <div class="container">
+        <h1>🔮 Как изменится это место через 10 лет?</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('image-upload').click()">
+            <h3>📸 Загрузите фото места</h3>
+            <p>Перетащите или кликните для загрузки</p>
+            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+        </div>
+        
+        <img id="image-preview" alt="Предпросмотр">
+        
+        <div>
+            <input type="text" id="prompt" placeholder="Опишите изменения (например: больше зелени, новые здания, экологичный транспорт...)">
+        </div>
+        
+        <button onclick="generateFuture()">🔮 Показать будущее</button>
+        
+        <div class="loading" id="loading">
+            🔍 Анализируем изображение... 🎨 Генерируем будущее...
+        </div>
+        
+        <div id="result"></div>
     </div>
-
-    <input type="text" id="prompt" placeholder="Опишите что хотите... (можно на русском)" value="красивый закат над морем">
-
-    <select id="model-select">
-        <option value="nanobanano">NanoBanano 🍌</option>
-        <option value="pollinations">Pollinations</option>
-        <option value="flux">FLUX</option>
-        <option value="dalle">DALL-E</option>
-    </select>
-
-    <div class="upload-container" id="upload-container">
-        <label>🖼️ Загрузите изображение для редактирования</label>
-        <input type="file" id="image-upload" accept="image/*">
-        <img id="image-preview" class="upload-preview" alt="Предпросмотр">
-    </div>
-
-    <div class="translation-info" id="translation-info">
-        Русский текст автоматически переводится на английский
-    </div>
-
-    <button onclick="generateImage()">Сгенерировать изображение</button>
-    
-    <div id="result"></div>
 
     <script>
-        const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
-        let currentMode = 'create';
-
-        function setMode(mode) {
-            currentMode = mode;
-            const uploadContainer = document.getElementById('upload-container');
-            const buttons = document.querySelectorAll('.mode-btn');
-            
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (mode === 'edit') {
-                uploadContainer.classList.add('active');
-                document.getElementById('prompt').placeholder = "Опишите как изменить изображение...";
-            } else {
-                uploadContainer.classList.remove('active');
-                document.getElementById('prompt').placeholder = "Опишите что хотите... (можно на русском)";
-            }
-        }
+        const SERVER_URL = "https://your-render-app.onrender.com";
 
         // Превью изображения
         document.getElementById('image-upload').addEventListener('change', function(e) {
@@ -144,38 +100,32 @@
                     preview.style.display = 'block';
                 }
                 reader.readAsDataURL(file);
-            } else {
-                preview.style.display = 'none';
             }
         });
 
-        async function generateImage() {
+        async function generateFuture() {
             const prompt = document.getElementById('prompt').value;
-            const model = document.getElementById('model-select').value;
             const imageFile = document.getElementById('image-upload').files[0];
             const resultDiv = document.getElementById('result');
+            const loading = document.getElementById('loading');
+            
+            if (!imageFile) {
+                alert('📸 Сначала загрузите фото места');
+                return;
+            }
             
             if (!prompt.trim()) {
-                alert('Введите описание');
-                return;
-            }
-
-            if (currentMode === 'edit' && !imageFile) {
-                alert('Для редактирования загрузите изображение');
+                alert('✍️ Опишите какие изменения хотите увидеть');
                 return;
             }
             
-            resultDiv.innerHTML = '<p>🔄 Генерируем... Переводчик работает...</p>';
+            loading.style.display = 'block';
+            resultDiv.innerHTML = '';
             
             try {
                 const formData = new FormData();
                 formData.append('prompt', prompt);
-                formData.append('model', model);
-                formData.append('edit_mode', currentMode === 'edit');
-                
-                if (imageFile) {
-                    formData.append('image', imageFile);
-                }
+                formData.append('image', imageFile);
                 
                 const response = await fetch(`${SERVER_URL}/generate`, {
                     method: 'POST',
@@ -186,11 +136,9 @@
                     const imageBlob = await response.blob();
                     const imageUrl = URL.createObjectURL(imageBlob);
                     resultDiv.innerHTML = `
-                        <p>✅ Изображение готово!</p>
-                        <p><small>Режим: ${currentMode === 'edit' ? 'редактирование' : 'создание'}</small></p>
-                        <img src="${imageUrl}" alt="Generated image">
-                        <br>
-                        <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
+                        <h3>✨ Вот как это может выглядеть через 10 лет:</h3>
+                        <img src="${imageUrl}" alt="Будущее" style="max-width: 100%; border-radius: 10px; margin: 20px 0;">
+                        <button onclick="downloadImage('${imageUrl}')">💾 Скачать изображение</button>
                     `;
                 } else {
                     const error = await response.json();
@@ -198,13 +146,15 @@
                 }
             } catch (error) {
                 resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения: ${error}</p>`;
+            } finally {
+                loading.style.display = 'none';
             }
         }
 
         function downloadImage(imageUrl) {
             const link = document.createElement('a');
             link.href = imageUrl;
-            link.download = 'generated-image.png';
+            link.download = 'будущее-через-10-лет.png';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -213,7 +163,7 @@
         // Enter для генерации
         document.getElementById('prompt').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                generateImage();
+                generateFuture();
             }
         });
     </script>
