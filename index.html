@@ -47,146 +47,168 @@
         .download-btn:hover {
             background: #218838;
         }
-        .model-info {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
+        .upload-container {
+            display: none;
+            margin: 15px 0;
+            padding: 15px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .upload-container.active {
+            display: block;
+        }
+        .upload-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px auto;
+            display: none;
+            border-radius: 5px;
+            border: 2px solid #28a745;
+        }
+        .mode-selector {
+            margin: 10px 0;
+        }
+        .mode-btn {
+            background: #6c757d;
+            margin: 5px;
+        }
+        .mode-btn.active {
+            background: #007bff;
         }
         .translation-info {
             font-size: 12px;
             color: #17a2b8;
             margin-top: 5px;
-            font-style: italic;
         }
-        .translation-result {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border-left: 4px solid #17a2b8;
-        }
-        .original-text {
-            color: #6c757d;
+        .model-info {
             font-size: 14px;
-        }
-        .translated-text {
-            color: #28a745;
-            font-weight: bold;
-            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <h1>🎨 Генератор изображений</h1>
-    <p>Опишите что хотите увидеть (можно на русском):</p>
     
-    <input type="text" id="prompt" placeholder="Например: красивый закат над морем...">
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('create')">🆕 Создать новое</button>
+        <button class="mode-btn" onclick="setMode('edit')">✏️ Редактировать изображение</button>
+    </div>
 
-    <select class="custom-select" id="model-select" required>
-        <option value="" selected disabled>Выберите модель</option>
-        <option value="pollinations">Pollinations Standard 🌟</option>
+    <input type="text" id="prompt" placeholder="Опишите что хотите... (можно на русском)" value="красивый закат над морем">
+
+    <select id="model-select">
+        <option value="nanobanano">NanoBanano 🍌</option>
+        <option value="pollinations">Pollinations</option>
         <option value="flux">FLUX</option>
         <option value="dalle">DALL-E</option>
-        <option value="black-forest-labs/FLUX.1-dev">FLUX.1-dev (Hugging Face)</option>
-        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell (Hugging Face)</option>
     </select>
-    <div class="model-info">Все модели поддерживают автоматический перевод с русского!</div>
-    <div class="translation-info" id="translation-info">Русский текст будет автоматически переведен на английский</div>
-    
+
+    <div class="upload-container" id="upload-container">
+        <label>🖼️ Загрузите изображение для редактирования</label>
+        <input type="file" id="image-upload" accept="image/*">
+        <img id="image-preview" class="upload-preview" alt="Предпросмотр">
+    </div>
+
+    <div class="translation-info" id="translation-info">
+        Русский текст автоматически переводится на английский
+    </div>
+
     <button onclick="generateImage()">Сгенерировать изображение</button>
     
     <div id="result"></div>
 
     <script>
-        const SERVER_URL = "https://hui-server.onrender.com";
-        
+        const SERVER_URL = "https://my-image-generator-npkn.onrender.com";
+        let currentMode = 'create';
+
+        function setMode(mode) {
+            currentMode = mode;
+            const uploadContainer = document.getElementById('upload-container');
+            const buttons = document.querySelectorAll('.mode-btn');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'edit') {
+                uploadContainer.classList.add('active');
+                document.getElementById('prompt').placeholder = "Опишите как изменить изображение... (например: это место через 10 лет с современными технологиями)";
+            } else {
+                uploadContainer.classList.remove('active');
+                document.getElementById('prompt').placeholder = "Опишите что хотите... (можно на русском)";
+            }
+        }
+
+        // Превью изображения
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('image-preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
         async function generateImage() {
             const prompt = document.getElementById('prompt').value;
-            const modelSelect = document.getElementById('model-select');
-            const selectedModel = modelSelect.value;
+            const model = document.getElementById('model-select').value;
+            const imageFile = document.getElementById('image-upload').files[0];
             const resultDiv = document.getElementById('result');
             
             if (!prompt.trim()) {
-                alert('Введите описание изображения');
+                alert('Введите описание');
+                return;
+            }
+
+            if (currentMode === 'edit' && !imageFile) {
+                alert('Для редактирования загрузите изображение');
                 return;
             }
             
-            if (!selectedModel) {
-                alert('Выберите модель');
-                return;
-            }
-            
-            resultDiv.innerHTML = '<p>🔄 Генерация запущена... Переводчик DeepSeek работает...</p>';
+            resultDiv.innerHTML = '<p>🔄 Генерируем... Переводчик работает...</p>';
             
             try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+                formData.append('model', model);
+                formData.append('edit_mode', currentMode === 'edit');
+                
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+                
                 const response = await fetch(`${SERVER_URL}/generate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        model: selectedModel
-                    })
+                    body: formData
                 });
                 
                 if (response.ok) {
                     const imageBlob = await response.blob();
                     const imageUrl = URL.createObjectURL(imageBlob);
-                    
-                    // Получаем информацию о переводе из заголовков или отдельным запросом
-                    const translationInfo = await getTranslationInfo(prompt);
-                    
                     resultDiv.innerHTML = `
                         <p>✅ Изображение готово!</p>
-                        <p><small>Модель: ${getModelName(selectedModel)}</small></p>
-                        
-                        ${translationInfo ? `
-                        <div class="translation-result">
-                            <div class="original-text">🇷🇺 Русский: "${translationInfo.original}"</div>
-                            <div class="translated-text">🇺🇸 English: "${translationInfo.translated}"</div>
-                        </div>
-                        ` : ''}
-                        
+                        <p><small>Режим: ${currentMode === 'edit' ? 'редактирование' : 'создание'}</small></p>
                         <img src="${imageUrl}" alt="Generated image">
                         <br>
                         <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
                     `;
                 } else {
                     const error = await response.json();
-                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error || 'Неизвестная ошибка'}</p>`;
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error}</p>`;
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения с сервером</p>`;
-                console.error('Error:', error);
+                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения: ${error}</p>`;
             }
         }
-        
-        async function getTranslationInfo(originalText) {
-            try {
-                const response = await fetch(`${SERVER_URL}/translate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        text: originalText
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    return {
-                        original: data.original,
-                        translated: data.deepseek_translation || data.google_translation || originalText
-                    };
-                }
-            } catch (e) {
-                console.error('Translation info error:', e);
-            }
-            return null;
-        }
-        
+
         function downloadImage(imageUrl) {
             const link = document.createElement('a');
             link.href = imageUrl;
@@ -195,33 +217,8 @@
             link.click();
             document.body.removeChild(link);
         }
-        
-        function getModelName(modelValue) {
-            const models = {
-                'pollinations': 'Pollinations Standard 🌟',
-                'flux': 'FLUX',
-                'dalle': 'DALL-E',
-                'black-forest-labs/FLUX.1-dev': 'FLUX.1-dev (Hugging Face)',
-                'black-forest-labs/FLUX.1-schnell': 'FLUX.1-schnell (Hugging Face)'
-            };
-            return models[modelValue] || modelValue;
-        }
-        
-        // Показываем подсказку о переводе
-        document.getElementById('prompt').addEventListener('input', function(e) {
-            const hint = document.getElementById('translation-info');
-            const text = e.target.value;
-            const hasRussian = /[а-яё]/i.test(text);
-            
-            if (hasRussian && text.length > 2) {
-                hint.textContent = '✓ DeepSeek переведет русский текст на английский';
-                hint.style.color = '#28a745';
-            } else {
-                hint.textContent = 'Русский текст будет автоматически переведен на английский';
-                hint.style.color = '#17a2b8';
-            }
-        });
-        
+
+        // Enter для генерации
         document.getElementById('prompt').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 generateImage();
@@ -230,4 +227,3 @@
     </script>
 </body>
 </html>
-
