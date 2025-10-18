@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор изображений</title>
+    <title>Генератор изображений Gemini</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,113 +11,130 @@
             margin: 0 auto;
             padding: 20px;
             text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
         }
-        input, button, select {
-            padding: 10px;
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        input, button, textarea {
+            padding: 15px;
             margin: 10px;
             font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
         }
-        input {
-            width: 300px;
+        input, textarea {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
         }
-        select {
-            width: 320px;
+        textarea {
+            height: 80px;
+            resize: vertical;
         }
         button {
-            background: #007bff;
+            background: #00c6ff;
             color: white;
-            border: none;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
         button:hover {
-            background: #0056b3;
+            background: #0072ff;
+            transform: translateY(-2px);
         }
         #result {
             margin-top: 20px;
         }
         #result img {
             max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
         }
         .download-btn {
-            background: #28a745;
-            margin-top: 10px;
+            background: #00d2ff;
+            margin-top: 15px;
         }
         .download-btn:hover {
-            background: #218838;
+            background: #00a8ff;
         }
         .upload-container {
-            display: none;
-            margin: 15px 0;
-            padding: 15px;
-            border: 2px dashed #007bff;
-            border-radius: 8px;
-            background: #f8f9fa;
-        }
-        .upload-container.active {
-            display: block;
+            margin: 20px 0;
+            padding: 20px;
+            border: 3px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
         }
         .upload-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 10px auto;
+            max-width: 300px;
+            max-height: 300px;
+            margin: 15px auto;
             display: none;
-            border-radius: 5px;
-            border: 2px solid #28a745;
-        }
-        .mode-selector {
-            margin: 10px 0;
+            border-radius: 10px;
+            border: 3px solid #00c6ff;
         }
         .mode-btn {
-            background: #6c757d;
+            background: rgba(255, 255, 255, 0.2);
             margin: 5px;
+            width: auto;
+            padding: 12px 20px;
         }
         .mode-btn.active {
-            background: #007bff;
+            background: #00c6ff;
         }
-        .translation-info {
-            font-size: 12px;
-            color: #17a2b8;
-            margin-top: 5px;
-        }
-        .model-info {
+        .info-text {
             font-size: 14px;
-            color: #666;
-            margin-top: 5px;
+            opacity: 0.8;
+            margin: 5px 0;
+        }
+        .feature-list {
+            text-align: left;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .feature-list li {
+            margin: 8px 0;
         }
     </style>
 </head>
 <body>
-    <h1>🎨 Генератор изображений</h1>
-    
-    <div class="mode-selector">
-        <button class="mode-btn active" onclick="setMode('create')">🆕 Создать новое</button>
-        <button class="mode-btn" onclick="setMode('edit')">✏️ Редактировать изображение</button>
+    <div class="container">
+        <h1>🎨 Генератор изображений Gemini</h1>
+        <p>Создавайте и редактируйте изображения с помощью AI</p>
+        
+        <div>
+            <button class="mode-btn active" onclick="setMode('create')">🆕 Создать новое изображение</button>
+            <button class="mode-btn" onclick="setMode('edit')">✏️ Редактировать изображение</button>
+        </div>
+
+        <textarea id="prompt" placeholder="Опишите что хотите... (можно на русском)"></textarea>
+
+        <div class="upload-container" id="upload-container">
+            <h3>🖼️ Загрузите изображение для редактирования</h3>
+            <input type="file" id="image-upload" accept="image/*">
+            <img id="image-preview" class="upload-preview" alt="Предпросмотр">
+            <div class="info-text">Загрузите фото и опишите как его изменить</div>
+        </div>
+
+        <div class="info-text">
+            ✅ Русский текст автоматически переводится на английский<br>
+            ✅ Используется Google Gemini AI<br>
+            ✅ Высокое качество генерации
+        </div>
+
+        <button onclick="generateImage()">🚀 Сгенерировать изображение</button>
+        
+        <div id="result"></div>
     </div>
-
-    <input type="text" id="prompt" placeholder="Опишите что хотите... (можно на русском)" value="красивый закат над морем">
-
-    <select id="model-select">
-        <option value="nanobanano">NanoBanano 🍌</option>
-        <option value="pollinations">Pollinations</option>
-        <option value="flux">FLUX</option>
-        <option value="dalle">DALL-E</option>
-    </select>
-
-    <div class="upload-container" id="upload-container">
-        <label>🖼️ Загрузите изображение для редактирования</label>
-        <input type="file" id="image-upload" accept="image/*">
-        <img id="image-preview" class="upload-preview" alt="Предпросмотр">
-    </div>
-
-    <div class="translation-info" id="translation-info">
-        Русский текст автоматически переводится на английский
-    </div>
-
-    <button onclick="generateImage()">Сгенерировать изображение</button>
-    
-    <div id="result"></div>
 
     <script>
         const SERVER_URL = "https://hui-server.onrender.com";
@@ -132,11 +149,11 @@
             event.target.classList.add('active');
             
             if (mode === 'edit') {
-                uploadContainer.classList.add('active');
-                document.getElementById('prompt').placeholder = "Опишите как изменить изображение... (например: это место через 10 лет с современными технологиями)";
+                uploadContainer.style.display = 'block';
+                document.getElementById('prompt').placeholder = "Опишите как изменить изображение... (например: сделай фон фиолетовый, добавь деревья, измени стиль на футуристичный)";
             } else {
-                uploadContainer.classList.remove('active');
-                document.getElementById('prompt').placeholder = "Опишите что хотите... (можно на русском)";
+                uploadContainer.style.display = 'none';
+                document.getElementById('prompt').placeholder = "Опишите что хотите создать... (можно на русском)";
             }
         }
 
@@ -159,7 +176,6 @@
 
         async function generateImage() {
             const prompt = document.getElementById('prompt').value;
-            const model = document.getElementById('model-select').value;
             const imageFile = document.getElementById('image-upload').files[0];
             const resultDiv = document.getElementById('result');
             
@@ -173,13 +189,11 @@
                 return;
             }
             
-            resultDiv.innerHTML = '<p>🔄 Генерируем... Переводчик работает...</p>';
+            resultDiv.innerHTML = '<p>🔄 Генерируем изображение... Переводчик работает...</p>';
             
             try {
                 const formData = new FormData();
                 formData.append('prompt', prompt);
-                formData.append('model', model);
-                formData.append('edit_mode', currentMode === 'edit');
                 
                 if (imageFile) {
                     formData.append('image', imageFile);
@@ -198,14 +212,14 @@
                         <p><small>Режим: ${currentMode === 'edit' ? 'редактирование' : 'создание'}</small></p>
                         <img src="${imageUrl}" alt="Generated image">
                         <br>
-                        <button class="download-btn" onclick="downloadImage('${imageUrl}')">Скачать изображение</button>
+                        <button class="download-btn" onclick="downloadImage('${imageUrl}')">💾 Скачать изображение</button>
                     `;
                 } else {
                     const error = await response.json();
-                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.error}</p>`;
+                    resultDiv.innerHTML = `<p style="color: #ff6b6b;">❌ Ошибка: ${error.error}</p>`;
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка соединения: ${error}</p>`;
+                resultDiv.innerHTML = `<p style="color: #ff6b6b;">❌ Ошибка соединения: ${error}</p>`;
             }
         }
 
@@ -220,11 +234,14 @@
 
         // Enter для генерации
         document.getElementById('prompt').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 generateImage();
             }
         });
+
+        // Скрываем контейнер загрузки при старте
+        document.getElementById('upload-container').style.display = 'none';
     </script>
 </body>
 </html>
-
